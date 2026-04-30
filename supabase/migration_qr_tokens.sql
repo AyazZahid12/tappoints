@@ -1,5 +1,11 @@
--- Migration: add qr_tokens table
+-- Migration: add qr_tokens table + fix negocios public read
 -- Run this in Supabase SQL Editor if the project already exists
+
+-- Fix: allow anonymous users to read negocios (needed for scan page)
+create policy "Public reads negocios" on negocios
+  for select using (true);
+
+-- Add qr_tokens table
 
 create table if not exists qr_tokens (
   id uuid primary key default gen_random_uuid(),

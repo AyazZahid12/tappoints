@@ -9,7 +9,7 @@ export default async function ClientesPage() {
 
   const { data: negocio } = await supabase
     .from('negocios')
-    .select('id, puntos_para_recompensa')
+    .select('id, puntos_para_recompensa, recompensa')
     .eq('user_id', user.id)
     .single()
 
@@ -25,6 +25,8 @@ export default async function ClientesPage() {
     <ClientesClient
       clientes={clientes || []}
       pointsForReward={negocio.puntos_para_recompensa}
+      negocioId={negocio.id}
+      recompensa={negocio.recompensa}
     />
   )
 }

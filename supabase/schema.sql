@@ -18,8 +18,13 @@ create table if not exists negocios (
 
 alter table negocios enable row level security;
 
-create policy "Negocio visible by owner" on negocios
+-- Owner can write (insert/update/delete) their own business
+create policy "Owner manages negocio" on negocios
   for all using (auth.uid() = user_id);
+
+-- Public (unauthenticated) can read any negocio (needed for scan page)
+create policy "Public reads negocios" on negocios
+  for select using (true);
 
 -- ─── CLIENTES ────────────────────────────────────────────────────────────────
 create table if not exists clientes (
