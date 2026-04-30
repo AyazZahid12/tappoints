@@ -64,18 +64,26 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
     const nuevoPuntos = cliente.puntos + pts
     const nuevasVisitas = cliente.visitas + 1
 
-    await supabase.from('clientes').update({
+    const { error: errUpdate } = await supabase.from('clientes').update({
       puntos: nuevoPuntos,
       visitas: nuevasVisitas,
       nivel: calcularNivel(nuevoPuntos),
       ultima_visita: new Date().toISOString(),
     }).eq('id', cliente.id)
 
-    await supabase.from('visitas').insert({
+    if (errUpdate) {
+      console.error('[sumar] update clientes:', errUpdate)
+      alert(`Error al sumar puntos: ${errUpdate.message} (${errUpdate.code})`)
+      setAdding(false)
+      return
+    }
+
+    const { error: errVisita } = await supabase.from('visitas').insert({
       negocio_id: negocioId,
       cliente_id: cliente.id,
       puntos_ganados: pts,
     })
+    if (errVisita) console.error('[sumar] insert visita:', errVisita)
 
     let puntosFinales = nuevoPuntos
     if (nuevoPuntos >= pointsForReward) {
@@ -106,13 +114,16 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
     setDeleting(true)
     const supabase = createClient()
 
-    await supabase.from('visitas').delete().eq('cliente_id', clienteId)
-    await supabase.from('cupones').delete().eq('cliente_id', clienteId)
-    const { error } = await supabase.from('clientes').delete().eq('id', clienteId)
+    const { error: errV } = await supabase.from('visitas').delete().eq('cliente_id', clienteId)
+    if (errV) console.error('[delete] visitas:', errV)
 
-    if (error) {
-      console.error('Error eliminando cliente:', error)
-      alert('No se pudo eliminar el cliente. Ejecuta migration_rls_fixes.sql en Supabase.')
+    const { error: errC } = await supabase.from('cupones').delete().eq('cliente_id', clienteId)
+    if (errC) console.error('[delete] cupones:', errC)
+
+    const { error: errCl } = await supabase.from('clientes').delete().eq('id', clienteId)
+    if (errCl) {
+      console.error('[delete] clientes:', errCl)
+      alert(`Error al eliminar: ${errCl.message} (${errCl.code})`)
       setDeleteId(null)
       setDeleting(false)
       return
