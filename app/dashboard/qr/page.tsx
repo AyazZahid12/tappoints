@@ -16,7 +16,6 @@ export default async function QRPage() {
   if (!negocio) redirect('/auth')
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://tappoints.com'
-  const url = `${appUrl}/${negocio.slug}`
 
-  return <QRClient businessName={negocio.nombre} url={url} slug={negocio.slug} />
+  return <QRClient businessName={negocio.nombre} appUrl={appUrl} slug={negocio.slug} />
 }

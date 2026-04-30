@@ -97,3 +97,29 @@ create policy "Public can insert cupones" on cupones
 
 create policy "Public can read cupones by cliente" on cupones
   for select using (true);
+
+-- ─── QR_TOKENS ───────────────────────────────────────────────────────────────
+create table if not exists qr_tokens (
+  id uuid primary key default gen_random_uuid(),
+  token text unique not null,
+  negocio_id uuid references negocios not null,
+  expires_at timestamptz not null,
+  used boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+alter table qr_tokens enable row level security;
+
+-- Only authenticated owner can create tokens for their business
+create policy "Owner creates qr_tokens" on qr_tokens
+  for insert with check (
+    negocio_id in (select id from negocios where user_id = auth.uid())
+  );
+
+-- Public can read tokens (to verify on scan page)
+create policy "Public reads qr_tokens" on qr_tokens
+  for select using (true);
+
+-- Public can mark token as used (atomic lock on scan)
+create policy "Public updates qr_tokens" on qr_tokens
+  for update using (true);
