@@ -105,9 +105,19 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
   async function eliminar(clienteId: string) {
     setDeleting(true)
     const supabase = createClient()
+
     await supabase.from('visitas').delete().eq('cliente_id', clienteId)
     await supabase.from('cupones').delete().eq('cliente_id', clienteId)
-    await supabase.from('clientes').delete().eq('id', clienteId)
+    const { error } = await supabase.from('clientes').delete().eq('id', clienteId)
+
+    if (error) {
+      console.error('Error eliminando cliente:', error)
+      alert('No se pudo eliminar el cliente. Ejecuta migration_rls_fixes.sql en Supabase.')
+      setDeleteId(null)
+      setDeleting(false)
+      return
+    }
+
     setClientes(prev => prev.filter(c => c.id !== clienteId))
     setDeleteId(null)
     setDeleting(false)
