@@ -47,12 +47,22 @@ create policy "Owner reads clients" on clientes
     negocio_id in (select id from negocios where user_id = auth.uid())
   );
 
--- Public (unauthenticated) can insert and update clients (for QR scan page)
+-- Public (unauthenticated) can read, insert and update clients (for QR scan page)
+-- Read is required so the scan page can look up an existing client by phone
+create policy "Public reads clientes" on clientes
+  for select using (true);
+
 create policy "Public can insert clients" on clientes
   for insert with check (true);
 
 create policy "Public can update clients" on clientes
   for update using (true);
+
+-- Owner can delete their clients
+create policy "Owner deletes clients" on clientes
+  for delete using (
+    negocio_id in (select id from negocios where user_id = auth.uid())
+  );
 
 -- ─── VISITAS ─────────────────────────────────────────────────────────────────
 create table if not exists visitas (
@@ -72,6 +82,11 @@ create policy "Owner reads visitas" on visitas
 
 create policy "Public can insert visitas" on visitas
   for insert with check (true);
+
+create policy "Owner deletes visitas" on visitas
+  for delete using (
+    negocio_id in (select id from negocios where user_id = auth.uid())
+  );
 
 -- ─── CUPONES ─────────────────────────────────────────────────────────────────
 create table if not exists cupones (
@@ -102,6 +117,11 @@ create policy "Public can insert cupones" on cupones
 
 create policy "Public can read cupones by cliente" on cupones
   for select using (true);
+
+create policy "Owner deletes cupones" on cupones
+  for delete using (
+    negocio_id in (select id from negocios where user_id = auth.uid())
+  );
 
 -- ─── QR_TOKENS ───────────────────────────────────────────────────────────────
 create table if not exists qr_tokens (

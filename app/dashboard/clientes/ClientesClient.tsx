@@ -25,9 +25,14 @@ interface Props {
 export default function ClientesClient({ clientes: initial, pointsForReward, negocioId, recompensa }: Props) {
   const [clientes, setClientes] = useState(initial)
   const [search, setSearch] = useState('')
+  // sumar puntos
   const [activeId, setActiveId] = useState<string | null>(null)
   const [pointInput, setPointInput] = useState('1')
   const [adding, setAdding] = useState(false)
+  // eliminar
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -40,11 +45,12 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
   )
 
   function openInput(id: string) {
+    setDeleteId(null)
     setActiveId(id)
     setPointInput('1')
   }
 
-  function cancel() {
+  function cancelSumar() {
     setActiveId(null)
     setPointInput('1')
   }
@@ -71,7 +77,6 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
       puntos_ganados: pts,
     })
 
-    // Coupon generation if threshold reached
     let puntosFinales = nuevoPuntos
     if (nuevoPuntos >= pointsForReward) {
       const { data: existing } = await supabase
@@ -80,11 +85,7 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
       if (!existing || existing.length === 0) {
         const codigo = 'TPC-' + Math.random().toString(36).slice(2, 8).toUpperCase()
         await supabase.from('cupones').insert({
-          negocio_id: negocioId,
-          cliente_id: cliente.id,
-          codigo,
-          recompensa,
-          canjeado: false,
+          negocio_id: negocioId, cliente_id: cliente.id, codigo, recompensa, canjeado: false,
         })
         await supabase.from('clientes').update({ puntos: 0, nivel: calcularNivel(0) }).eq('id', cliente.id)
         puntosFinales = 0
@@ -96,10 +97,20 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
         ? { ...c, puntos: puntosFinales, visitas: nuevasVisitas, nivel: calcularNivel(puntosFinales), ultima_visita: new Date().toISOString() }
         : c
     ))
-
     setActiveId(null)
     setPointInput('1')
     setAdding(false)
+  }
+
+  async function eliminar(clienteId: string) {
+    setDeleting(true)
+    const supabase = createClient()
+    await supabase.from('visitas').delete().eq('cliente_id', clienteId)
+    await supabase.from('cupones').delete().eq('cliente_id', clienteId)
+    await supabase.from('clientes').delete().eq('id', clienteId)
+    setClientes(prev => prev.filter(c => c.id !== clienteId))
+    setDeleteId(null)
+    setDeleting(false)
   }
 
   const formatDate = (d: string | null) => {
@@ -149,8 +160,7 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                 {['Cliente', 'Puntos', 'Visitas', 'Última visita', 'Nivel', ''].map((h, i) => (
                   <th key={i} style={{
                     textAlign: 'left', fontSize: 11, color: '#0A1A1450', fontWeight: 600,
-                    letterSpacing: '0.06em', textTransform: 'uppercase',
-                    padding: '4px 16px 8px',
+                    letterSpacing: '0.06em', textTransform: 'uppercase', padding: '4px 16px 8px',
                   }}>{h}</th>
                 ))}
               </tr>
@@ -161,6 +171,7 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                 const avatar = c.nombre.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
                 const nivel = c.nivel as Nivel
                 const isActive = activeId === c.id
+                const isDeleting = deleteId === c.id
 
                 return (
                   <tr key={c.id}>
@@ -195,7 +206,29 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                       }}>{TIER_LABELS[nivel]}</span>
                     </td>
                     <td style={{ background: 'white', padding: '10px 16px', borderRadius: '0 12px 12px 0', textAlign: 'right' }}>
-                      {isActive ? (
+                      {isDeleting ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                          <span style={{ fontSize: 12, color: '#EF4444', fontWeight: 500, whiteSpace: 'nowrap' }}>¿Eliminar?</span>
+                          <button
+                            onClick={() => eliminar(c.id)}
+                            disabled={deleting}
+                            style={{
+                              padding: '5px 10px', borderRadius: 8, border: 'none',
+                              background: '#EF4444', color: 'white', fontSize: 12, fontWeight: 600,
+                              cursor: deleting ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                              opacity: deleting ? 0.6 : 1
+                            }}
+                          >Sí</button>
+                          <button
+                            onClick={() => setDeleteId(null)}
+                            style={{
+                              padding: '5px 10px', borderRadius: 8, border: '1.5px solid #0A1A1415',
+                              background: 'transparent', fontSize: 12, fontWeight: 500,
+                              cursor: 'pointer', fontFamily: 'inherit', color: '#0A1A1460'
+                            }}
+                          >No</button>
+                        </div>
+                      ) : isActive ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
                           <input
                             ref={inputRef}
@@ -205,7 +238,7 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                             onChange={e => setPointInput(e.target.value)}
                             onKeyDown={e => {
                               if (e.key === 'Enter') confirm(c)
-                              if (e.key === 'Escape') cancel()
+                              if (e.key === 'Escape') cancelSumar()
                             }}
                             style={{
                               width: 52, padding: '5px 8px', borderRadius: 8,
@@ -219,23 +252,17 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                             disabled={adding}
                             style={{
                               width: 28, height: 28, borderRadius: 8, border: 'none',
-                              background: ACCENT, color: 'white', cursor: adding ? 'not-allowed' : 'pointer',
+                              background: ACCENT, cursor: adding ? 'not-allowed' : 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               opacity: adding ? 0.6 : 1, flexShrink: 0
                             }}
                           >
-                            {adding ? (
-                              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                              </svg>
-                            ) : (
-                              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M20 6L9 17l-5-5"/>
-                              </svg>
-                            )}
+                            <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 6L9 17l-5-5"/>
+                            </svg>
                           </button>
                           <button
-                            onClick={cancel}
+                            onClick={cancelSumar}
                             style={{
                               width: 28, height: 28, borderRadius: 8, border: '1.5px solid #0A1A1415',
                               background: 'transparent', cursor: 'pointer',
@@ -248,21 +275,36 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => openInput(c.id)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px',
-                            borderRadius: 8, border: `1.5px solid ${ACCENT}30`,
-                            background: ACCENT + '08', color: ACCENT,
-                            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-                            whiteSpace: 'nowrap', transition: 'background 0.15s'
-                          }}
-                        >
-                          <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
-                            <path d="M12 5v14M5 12h14"/>
-                          </svg>
-                          Sumar pts
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                          <button
+                            onClick={() => openInput(c.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px',
+                              borderRadius: 8, border: `1.5px solid ${ACCENT}30`,
+                              background: ACCENT + '08', color: ACCENT,
+                              fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round">
+                              <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            Sumar pts
+                          </button>
+                          <button
+                            onClick={() => { setActiveId(null); setDeleteId(c.id) }}
+                            title="Eliminar cliente"
+                            style={{
+                              width: 28, height: 28, borderRadius: 8, border: '1.5px solid #EF444430',
+                              background: '#EF444408', cursor: 'pointer',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                            }}
+                          >
+                            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
