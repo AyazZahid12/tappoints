@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { id: 'programa', label: 'Programa', icon: 'program', href: '/dashboard/programa' },
   { id: 'qr', label: 'Mi QR / NFC', icon: 'qr', href: '/dashboard/qr' },
   { id: 'cupones', label: 'Cupones', icon: 'coupons', href: '/dashboard/cupones' },
+  { id: 'configuracion', label: 'Configuración', icon: 'settings', href: '/dashboard/configuracion' },
 ]
 
 const ACCENT = '#1D9E75'

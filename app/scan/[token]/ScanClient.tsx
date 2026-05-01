@@ -248,12 +248,23 @@ export default function ScanClient({ token, negocio, expiresAt }: Props) {
     return (
       <Screen negocioNombre={negocio.nombre}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div>
+          {/* Prominent employee callout */}
+          <div style={{ background: ACCENT, borderRadius: 14, padding: '16px 20px', marginBottom: 24 }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>📢</div>
+            <div style={{ fontSize: 17, fontWeight: 700, color: 'white', marginBottom: 4 }}>
+              Pide al empleado que apruebe tu punto
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>
+              Muéstrale esta pantalla
+            </div>
+          </div>
+
+          <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0A1A14', marginBottom: 8 }}>
             Solicitud enviada
           </h2>
           <p style={{ fontSize: 14, color: '#0A1A1470', lineHeight: 1.6, marginBottom: 20 }}>
-            Ya sumaste un punto hoy. Tu solicitud está pendiente de aprobación por el negocio.
+            Ya sumaste un punto hoy. Tu solicitud está pendiente de aprobación.
           </p>
           <div style={{ background: '#FEF3C7', borderRadius: 12, padding: '14px 18px', marginBottom: 16 }}>
             <div style={{ fontSize: 13, color: '#92400E', fontWeight: 500 }}>
