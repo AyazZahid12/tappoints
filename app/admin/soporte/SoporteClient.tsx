@@ -89,7 +89,7 @@ export default function SoporteClient({ mensajes: initial }: { mensajes: Mensaje
   const tabLabels: Record<string, string> = { todos: 'Todos', abierto: 'Abierto', 'en revisión': 'En revisión', resuelto: 'Resuelto' }
 
   return (
-    <div className="fade-up" style={{ padding: 32, overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.04em', color: C.text }}>Soporte</h1>
         <p style={{ fontSize: 13, color: C.dim, marginTop: 4 }}>{mensajes.length} ticket{mensajes.length !== 1 ? 's' : ''} en total</p>

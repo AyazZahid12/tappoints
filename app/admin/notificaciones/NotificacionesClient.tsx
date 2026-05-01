@@ -57,7 +57,7 @@ export default function NotificacionesClient({ notificaciones }: { notificacione
   const tabLabels: Record<string, string> = { todas: 'Todas', alerta: 'Alertas', registro: 'Registros', inactivo: 'Inactivos' }
 
   return (
-    <div className="fade-up" style={{ padding: 32, overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.04em', color: C.text }}>Notificaciones</h1>

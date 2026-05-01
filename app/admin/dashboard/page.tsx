@@ -46,7 +46,6 @@ export default async function AdminDashboardPage() {
     { data: visitasData },
     { count: cuponesCanjeados },
     { data: clientesPorNegocio },
-    { data: visitasRecientes },
     { count: totalCupones },
   ] = await Promise.all([
     admin.from('negocios').select('id, nombre, plan, activo, created_at'),
@@ -54,7 +53,6 @@ export default async function AdminDashboardPage() {
     admin.from('visitas').select('puntos_ganados'),
     admin.from('cupones').select('*', { count: 'exact', head: true }).eq('canjeado', true),
     admin.from('clientes').select('negocio_id'),
-    admin.from('visitas').select('created_at, puntos_ganados, negocio_id, clientes(nombre)').order('created_at', { ascending: false }).limit(10),
     admin.from('cupones').select('*', { count: 'exact', head: true }),
   ])
 
@@ -62,7 +60,7 @@ export default async function AdminDashboardPage() {
   const planGratis = negocios?.filter(n => (n?.plan ?? 'gratis') === 'gratis').length || 0
   const planPro = negocios?.filter(n => n?.plan === 'pro').length || 0
   const planBusiness = negocios?.filter(n => n?.plan === 'business').length || 0
-  const mrr = planPro * 29 + planBusiness * 79
+  const mrr = Math.round(planPro * 19.99 + planBusiness * 49.99)
   const totalPuntos = visitasData?.reduce((acc, v) => acc + (v.puntos_ganados || 0), 0) || 0
 
   const clientesByNegocio: Record<string, number> = {}
@@ -97,21 +95,21 @@ export default async function AdminDashboardPage() {
   ]
 
   return (
-    <div className="fade-up" style={{ padding: 32, overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.04em', color: C.text }}>Dashboard Superadmin</h1>
         <p style={{ color: C.dim, fontSize: 13, marginTop: 4 }}>Vista global de la plataforma TapPoints</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
+      <div className="admin-kpi-grid" style={{ display: 'grid', gap: 14 }}>
         <KpiCard label="Total negocios" value={String(totalNegocios)} sub={`${totalNegocios} registrados`} />
         <KpiCard label="Plan Gratis" value={String(planGratis)} sub={`${Math.round((planGratis / planTotal) * 100)}% del total`} />
-        <KpiCard label="Plan Pro" value={String(planPro)} color={C.blue} sub="$29/mes c/u" />
-        <KpiCard label="Plan Business" value={String(planBusiness)} color={C.purple} sub="$79/mes c/u" />
-        <KpiCard label="MRR estimado" value={`$${mrr}`} color={C.green} sub="recurrente mensual" />
+        <KpiCard label="Plan Pro" value={String(planPro)} color={C.blue} sub="19,99€/mes c/u" />
+        <KpiCard label="Plan Business" value={String(planBusiness)} color={C.purple} sub="49,99€/mes c/u" />
+        <KpiCard label="MRR estimado" value={`${mrr}€`} color={C.green} sub="recurrente mensual" />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
+      <div className="chart-grid" style={{ display: 'grid', gap: 16 }}>
         <div style={{ background: C.card, borderRadius: 14, padding: 24, border: `1px solid ${C.border}` }}>
           <div style={{ fontWeight: 600, fontSize: 15, color: C.text, marginBottom: 4 }}>Nuevos negocios por mes</div>
           <div style={{ fontSize: 12, color: C.dim, marginBottom: 20 }}>Últimos 12 meses</div>
@@ -200,49 +198,6 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      <div style={{ background: C.card, borderRadius: 14, padding: 24, border: `1px solid ${C.border}` }}>
-        <div style={{ fontWeight: 600, fontSize: 15, color: C.text, marginBottom: 4 }}>Actividad reciente</div>
-        <div style={{ fontSize: 12, color: C.dim, marginBottom: 16 }}>Últimas 10 visitas en la plataforma</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {visitasRecientes && visitasRecientes.length > 0 ? visitasRecientes.map((v: any, i: number) => {
-            const dt = new Date(v.created_at)
-            const timeStr = dt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-            const dateStr = dt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
-            const clientNombre = (v.clientes as any)?.nombre || 'Cliente'
-            const initials = clientNombre.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
-            return (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0',
-                borderBottom: i < (visitasRecientes.length - 1) ? `1px solid ${C.border}` : 'none',
-              }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-                  background: C.greenDim, color: C.green,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700,
-                }}>{initials}</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {clientNombre}
-                  </div>
-                  <div style={{ fontSize: 12, color: C.dim, marginTop: 2 }}>
-                    <span style={{ background: C.greenDim, color: C.green, fontWeight: 600, fontSize: 11, padding: '1px 7px', borderRadius: 99 }}>
-                      +{v.puntos_ganados || 1} pts
-                    </span>
-                    {' · '}Visita registrada
-                  </div>
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{timeStr}</div>
-                  <div style={{ fontSize: 11, color: C.dim, marginTop: 2 }}>{dateStr}</div>
-                </div>
-              </div>
-            )
-          }) : (
-            <p style={{ fontSize: 13, color: C.dim }}>Sin actividad reciente</p>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

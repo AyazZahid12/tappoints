@@ -66,27 +66,27 @@ export default async function AdminEstadisticasPage() {
 
   const features = [
     { label: 'Registro de puntos', value: totalVisitas || 0, color: C.green },
-    { label: 'Cupones generados', value: totalCupones || 0, color: C.amber },
-    { label: 'Cupones canjeados', value: cuponesCanjeados || 0, color: C.purple },
-    { label: 'Expositores NFC', value: totalNfc || 0, color: C.blue },
+    { label: 'Cupones generados', value: totalCupones || 0, color: C.green },
+    { label: 'Cupones canjeados', value: cuponesCanjeados || 0, color: C.green },
+    { label: 'Expositores NFC', value: totalNfc || 0, color: C.green },
   ]
   const maxFeature = Math.max(...features.map(f => f.value), 1)
 
   return (
-    <div className="fade-up" style={{ padding: 32, overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.04em', color: C.text }}>Estadísticas globales</h1>
         <p style={{ fontSize: 13, color: C.dim, marginTop: 4 }}>Métricas de uso de toda la plataforma</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+      <div className="admin-kpi-grid" style={{ display: 'grid', gap: 14 }}>
         <KpiCard label="Total visitas" value={(totalVisitas || 0).toLocaleString()} color={C.green} />
-        <KpiCard label="Total puntos dados" value={totalPuntos.toLocaleString()} color={C.purple} />
-        <KpiCard label="Cupones generados" value={(totalCupones || 0).toLocaleString()} color={C.amber} />
-        <KpiCard label="Cupones canjeados" value={(cuponesCanjeados || 0).toLocaleString()} color={C.blue} />
+        <KpiCard label="Total puntos dados" value={totalPuntos.toLocaleString()} color={C.green} />
+        <KpiCard label="Cupones generados" value={(totalCupones || 0).toLocaleString()} color={C.green} />
+        <KpiCard label="Cupones canjeados" value={(cuponesCanjeados || 0).toLocaleString()} color={C.green} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 16 }}>
+      <div className="chart-grid" style={{ display: 'grid', gap: 16 }}>
         <div style={{ background: C.card, borderRadius: 14, padding: 24, border: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15, color: C.text }}>Funciones más usadas</div>
@@ -110,9 +110,9 @@ export default async function AdminEstadisticasPage() {
             <div style={{ fontWeight: 600, fontSize: 13, color: C.muted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Distribución por plan</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { label: 'Gratis', count: planGratis, color: C.muted },
-                { label: 'Pro', count: planPro, color: C.blue },
-                { label: 'Business', count: planBusiness, color: C.purple },
+                { label: 'Gratis', count: planGratis, color: C.green },
+                { label: 'Pro', count: planPro, color: C.green },
+                { label: 'Business', count: planBusiness, color: C.green },
               ].map(p => (
                 <div key={p.label} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, flexShrink: 0 }} />

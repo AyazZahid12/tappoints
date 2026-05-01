@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { QRCodeSVG } from 'qrcode.react'
 import { createClient } from '@/lib/supabase'
 
 const C = {
@@ -55,6 +56,19 @@ function FilterTab({ label, active, onClick }: { label: string; active: boolean;
   )
 }
 
+interface DetailData {
+  ownerEmail: string
+  lastSignIn: string
+  slug: string
+  clientes: { id: string; nombre: string; puntos: number; nivel: string; visitas: number; ultima_visita: string }[]
+  visitas: { created_at: string; puntos_ganados: number; clientes: { nombre: string } | null }[]
+  cuponesGenerados: number
+  cuponesCanjeados: number
+}
+
+const TIER_LABELS: Record<string, string> = { bronze: 'Bronce', silver: 'Plata', gold: 'Oro' }
+const TIER_COLORS: Record<string, string> = { bronze: '#B45309', silver: '#6B7280', gold: '#D97706' }
+
 export default function NegociosClient({ negocios: initialNegocios }: { negocios: Negocio[] }) {
   const [negocios, setNegocios] = useState<Negocio[]>(initialNegocios)
   const [search, setSearch] = useState('')
@@ -63,6 +77,9 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
   const [selected, setSelected] = useState<Negocio | null>(null)
   const [detailPlan, setDetailPlan] = useState('gratis')
   const [saving, setSaving] = useState(false)
+  const [detailData, setDetailData] = useState<DetailData | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const supabase = createClient()
 
   const filtered = negocios.filter(n => {
@@ -72,9 +89,17 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
     return matchSearch && matchPlan && matchActivo
   })
 
-  function openDetail(n: Negocio) {
+  async function openDetail(n: Negocio) {
     setSelected(n)
     setDetailPlan(n.plan)
+    setDetailData(null)
+    setDetailLoading(true)
+    try {
+      const res = await fetch(`/api/admin/negocio-detail?id=${n.id}`)
+      if (res.ok) setDetailData(await res.json())
+    } finally {
+      setDetailLoading(false)
+    }
   }
 
   async function savePlan() {
@@ -100,6 +125,18 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
     setSaving(false)
   }
 
+  async function deleteNegocio() {
+    if (!selected) return
+    if (!window.confirm(`¿Eliminar permanentemente "${selected.nombre}"? Esta acción no se puede deshacer.`)) return
+    setDeleting(true)
+    const res = await fetch(`/api/admin/negocio-detail?id=${selected.id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setNegocios(prev => prev.filter(n => n.id !== selected.id))
+      setSelected(null)
+    }
+    setDeleting(false)
+  }
+
   function exportCsv() {
     const rows = [['ID', 'Nombre', 'Slug', 'Plan', 'Activo', 'Clientes', 'Registrado']]
     filtered.forEach(n => rows.push([n.id, n.nombre, n.slug, n.plan, String(n.activo), String(n.clienteCount), n.created_at]))
@@ -112,7 +149,7 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
   }
 
   return (
-    <div className="fade-up" style={{ padding: 32, overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.04em', color: C.text }}>Negocios</h1>
@@ -233,66 +270,147 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 16, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>Clientes</div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: C.text, marginTop: 4 }}>{selected.clienteCount}</div>
+              {/* KPI row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, color: C.dim }}>Clientes</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginTop: 2 }}>{selected.clienteCount}</div>
                 </div>
-                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 16, border: `1px solid ${C.border}` }}>
-                  <div style={{ fontSize: 11, color: C.dim, fontWeight: 500 }}>Estado</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: selected.activo ? C.green : C.red, marginTop: 4 }}>
-                    {selected.activo ? 'Activo' : 'Inactivo'}
-                  </div>
+                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, color: C.dim }}>Cupones</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: C.text, marginTop: 2 }}>{detailData?.cuponesGenerados ?? '—'}</div>
+                </div>
+                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 14, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, color: C.dim }}>Canjeados</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: C.green, marginTop: 2 }}>{detailData?.cuponesCanjeados ?? '—'}</div>
                 </div>
               </div>
 
+              {/* Owner info */}
+              <div style={{ background: C.cardAlt, borderRadius: 12, padding: 16, border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Información del dueño</div>
+                {detailLoading ? (
+                  <div style={{ fontSize: 13, color: C.dim }}>Cargando...</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ fontSize: 13, color: C.text }}><span style={{ color: C.dim }}>Email: </span>{detailData?.ownerEmail || '—'}</div>
+                    <div style={{ fontSize: 13, color: C.text }}><span style={{ color: C.dim }}>Slug: </span>/{detailData?.slug || selected.slug}</div>
+                    <div style={{ fontSize: 13, color: C.text }}><span style={{ color: C.dim }}>Registrado: </span>{new Date(selected.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+                    <div style={{ fontSize: 13, color: C.text }}>
+                      <span style={{ color: C.dim }}>Último acceso: </span>
+                      {detailData?.lastSignIn ? new Date(detailData.lastSignIn).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                    </div>
+                    <div style={{ fontSize: 13, color: C.text }}>
+                      <span style={{ color: C.dim }}>Estado: </span>
+                      <span style={{ color: selected.activo ? C.green : C.red, fontWeight: 600 }}>{selected.activo ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* QR */}
+              {detailData?.slug && (
+                <div style={{ background: C.cardAlt, borderRadius: 12, padding: 16, border: `1px solid ${C.border}` }}>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>QR del negocio</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <div style={{ padding: 10, background: 'white', borderRadius: 10, border: `1px solid ${C.border}` }}>
+                      <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/${detailData.slug}`} size={100} fgColor="#0D2B1F" bgColor="white" level="H" />
+                    </div>
+                    <div style={{ fontSize: 12, color: C.dim }}>/{detailData.slug}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Clientes list */}
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cambiar plan</div>
-                <select
-                  value={detailPlan}
-                  onChange={e => setDetailPlan(e.target.value)}
-                  style={{
-                    width: '100%', padding: '10px 14px', borderRadius: 10,
-                    border: `1px solid ${C.border}`, fontSize: 14, color: C.text,
-                    background: C.cardAlt, outline: 'none', fontFamily: 'inherit', cursor: 'pointer',
-                  }}
-                >
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Clientes ({detailLoading ? '…' : detailData?.clientes.length ?? 0})
+                </div>
+                {detailLoading ? (
+                  <div style={{ fontSize: 13, color: C.dim }}>Cargando...</div>
+                ) : detailData?.clientes.length === 0 ? (
+                  <div style={{ fontSize: 13, color: C.dim }}>Sin clientes</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
+                    {detailData?.clientes.map((c, i) => {
+                      const nivel = c.nivel || 'bronze'
+                      const initials = c.nombre.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+                      return (
+                        <div key={c.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                          borderBottom: i < (detailData.clientes.length - 1) ? `1px solid ${C.border}` : 'none',
+                          background: C.card,
+                        }}>
+                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.greenDim, color: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{initials}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nombre}</div>
+                            <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 99, background: (TIER_COLORS[nivel] || '#B45309') + '20', color: TIER_COLORS[nivel] || '#B45309' }}>
+                              {TIER_LABELS[nivel] || nivel}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.green }}>{c.puntos} pts</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Últimas visitas */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Últimas visitas</div>
+                {detailLoading ? (
+                  <div style={{ fontSize: 13, color: C.dim }}>Cargando...</div>
+                ) : detailData?.visitas.length === 0 ? (
+                  <div style={{ fontSize: 13, color: C.dim }}>Sin visitas</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
+                    {detailData?.visitas.map((v, i) => {
+                      const dt = new Date(v.created_at)
+                      const clientNombre = (v.clientes as any)?.nombre || 'Cliente'
+                      return (
+                        <div key={i} style={{
+                          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                          borderBottom: i < (detailData.visitas.length - 1) ? `1px solid ${C.border}` : 'none',
+                          background: C.card,
+                        }}>
+                          <div style={{ flex: 1, fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientNombre}</div>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: C.green, background: C.greenDim, padding: '1px 7px', borderRadius: 99 }}>+{v.puntos_ganados || 1} pts</span>
+                          <div style={{ fontSize: 11, color: C.dim, flexShrink: 0 }}>{dt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Change plan */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Cambiar plan</div>
+                <select value={detailPlan} onChange={e => setDetailPlan(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: C.cardAlt, outline: 'none', fontFamily: 'inherit', cursor: 'pointer' }}>
                   <option value="gratis">Gratis</option>
-                  <option value="pro">Pro ($29/mes)</option>
-                  <option value="business">Business ($79/mes)</option>
+                  <option value="pro">Pro (19,99€/mes)</option>
+                  <option value="business">Business (49,99€/mes)</option>
                 </select>
-                <button onClick={savePlan} disabled={saving || detailPlan === selected.plan} style={{
-                  marginTop: 10, width: '100%', padding: '10px', borderRadius: 10,
-                  background: (saving || detailPlan === selected.plan) ? C.greenDim : C.green,
-                  color: (saving || detailPlan === selected.plan) ? C.green : 'white',
-                  border: 'none', cursor: (saving || detailPlan === selected.plan) ? 'not-allowed' : 'pointer',
-                  fontSize: 14, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s',
-                }}>
+                <button onClick={savePlan} disabled={saving || detailPlan === selected.plan} style={{ marginTop: 10, width: '100%', padding: '10px', borderRadius: 10, background: (saving || detailPlan === selected.plan) ? C.greenDim : C.green, color: (saving || detailPlan === selected.plan) ? C.green : 'white', border: 'none', cursor: (saving || detailPlan === selected.plan) ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s' }}>
                   {saving ? 'Guardando...' : 'Guardar plan'}
                 </button>
               </div>
 
+              {/* Toggle active */}
               <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Estado del negocio</div>
-                <button onClick={toggleActivo} disabled={saving} style={{
-                  width: '100%', padding: '10px', borderRadius: 10,
-                  background: selected.activo ? C.redL : C.greenDim,
-                  color: selected.activo ? C.red : C.green,
-                  border: `1px solid ${selected.activo ? 'rgba(229,57,53,0.2)' : 'rgba(29,158,117,0.2)'}`,
-                  cursor: saving ? 'not-allowed' : 'pointer',
-                  fontSize: 14, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s',
-                }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Estado del negocio</div>
+                <button onClick={toggleActivo} disabled={saving} style={{ width: '100%', padding: '10px', borderRadius: 10, background: selected.activo ? C.redL : C.greenDim, color: selected.activo ? C.red : C.green, border: `1px solid ${selected.activo ? 'rgba(229,57,53,0.2)' : 'rgba(29,158,117,0.2)'}`, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s' }}>
                   {selected.activo ? 'Desactivar negocio' : 'Activar negocio'}
                 </button>
               </div>
 
+              {/* Delete */}
               <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-                <div style={{ fontSize: 12, color: C.dim }}>Slug: <span style={{ color: C.text, fontWeight: 500 }}>/{selected.slug}</span></div>
-                <div style={{ fontSize: 12, color: C.dim, marginTop: 6 }}>
-                  Registrado: <span style={{ color: C.text, fontWeight: 500 }}>
-                    {new Date(selected.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
-                  </span>
-                </div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: C.red, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Zona peligrosa</div>
+                <button onClick={deleteNegocio} disabled={deleting} style={{ width: '100%', padding: '10px', borderRadius: 10, background: C.redL, color: C.red, border: `1px solid rgba(229,57,53,0.25)`, cursor: deleting ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit', opacity: deleting ? 0.7 : 1 }}>
+                  {deleting ? 'Eliminando...' : 'Eliminar negocio permanentemente'}
+                </button>
               </div>
             </div>
           </div>

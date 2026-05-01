@@ -30,6 +30,7 @@ export default async function AdminNotificacionesPage() {
   const negociosConVisitasRecientes = new Set(visitasRecientes?.map(v => v.negocio_id) || [])
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   const notificaciones: Notificacion[] = []
 
   negocios?.forEach(n => {
@@ -57,8 +58,8 @@ export default async function AdminNotificacionesPage() {
       })
     }
 
-    const activo = (n as any)?.activo ?? true
-    if (!activo || !negociosConVisitasRecientes.has(n.id)) {
+    const esAntiguo = registrado < thirtyDaysAgo
+    if (esAntiguo && !negociosConVisitasRecientes.has(n.id)) {
       notificaciones.push({
         id: `inactivo-${n.id}`,
         tipo: 'inactivo',

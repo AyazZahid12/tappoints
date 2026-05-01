@@ -58,6 +58,7 @@ body {
 .stats-grid  { grid-template-columns: repeat(3, 1fr); }
 .chart-grid  { grid-template-columns: 1.4fr 1fr; }
 .programa-grid { grid-template-columns: 1fr 1fr; }
+.admin-kpi-grid { grid-template-columns: repeat(5, 1fr); }
 
 /* Page padding */
 .page-pad { padding: 32px; }
@@ -98,8 +99,9 @@ body {
   .stat-value  { font-size: 22px !important; }
 
   /* Content grids */
-  .chart-grid    { grid-template-columns: 1fr !important; }
-  .programa-grid { grid-template-columns: 1fr !important; }
+  .chart-grid      { grid-template-columns: 1fr !important; }
+  .programa-grid   { grid-template-columns: 1fr !important; }
+  .admin-kpi-grid  { grid-template-columns: 1fr 1fr !important; }
 
   /* QR page */
   .qr-layout { flex-direction: column !important; }
