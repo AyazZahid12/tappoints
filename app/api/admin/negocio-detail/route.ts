@@ -19,12 +19,10 @@ export async function GET(req: NextRequest) {
   const [
     { data: negocio },
     { data: clientes },
-    { data: visitas },
     { data: cupones },
   ] = await Promise.all([
     admin.from('negocios').select('user_id, slug').eq('id', id).single(),
     admin.from('clientes').select('id, nombre, puntos, nivel, visitas, ultima_visita').eq('negocio_id', id).order('puntos', { ascending: false }).limit(20),
-    admin.from('visitas').select('created_at, puntos_ganados, clientes(nombre)').eq('negocio_id', id).order('created_at', { ascending: false }).limit(10),
     admin.from('cupones').select('id, canjeado, created_at').eq('negocio_id', id),
   ])
 
@@ -41,7 +39,6 @@ export async function GET(req: NextRequest) {
     lastSignIn,
     slug: negocio?.slug ?? '',
     clientes: clientes ?? [],
-    visitas: visitas ?? [],
     cuponesGenerados: cupones?.length ?? 0,
     cuponesCanjeados: cupones?.filter(c => c.canjeado).length ?? 0,
   })

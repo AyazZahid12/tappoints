@@ -61,7 +61,6 @@ interface DetailData {
   lastSignIn: string
   slug: string
   clientes: { id: string; nombre: string; puntos: number; nivel: string; visitas: number; ultima_visita: string }[]
-  visitas: { created_at: string; puntos_ganados: number; clientes: { nombre: string } | null }[]
   cuponesGenerados: number
   cuponesCanjeados: number
 }
@@ -349,34 +348,6 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
                             </span>
                           </div>
                           <div style={{ fontSize: 13, fontWeight: 700, color: C.green }}>{c.puntos} pts</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Últimas visitas */}
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Últimas visitas</div>
-                {detailLoading ? (
-                  <div style={{ fontSize: 13, color: C.dim }}>Cargando...</div>
-                ) : detailData?.visitas.length === 0 ? (
-                  <div style={{ fontSize: 13, color: C.dim }}>Sin visitas</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: `1px solid ${C.border}`, borderRadius: 10, overflow: 'hidden' }}>
-                    {detailData?.visitas.map((v, i) => {
-                      const dt = new Date(v.created_at)
-                      const clientNombre = (v.clientes as any)?.nombre || 'Cliente'
-                      return (
-                        <div key={i} style={{
-                          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
-                          borderBottom: i < (detailData.visitas.length - 1) ? `1px solid ${C.border}` : 'none',
-                          background: C.card,
-                        }}>
-                          <div style={{ flex: 1, fontSize: 13, color: C.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientNombre}</div>
-                          <span style={{ fontSize: 11, fontWeight: 600, color: C.green, background: C.greenDim, padding: '1px 7px', borderRadius: 99 }}>+{v.puntos_ganados || 1} pts</span>
-                          <div style={{ fontSize: 11, color: C.dim, flexShrink: 0 }}>{dt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</div>
                         </div>
                       )
                     })}
