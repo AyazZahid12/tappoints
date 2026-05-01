@@ -19,19 +19,18 @@ export default function AuthPage() {
     setLoading(true)
     setError('')
 
+    let authedEmail = ''
+
     if (mode === 'login') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
-      if (email === 'tappointsboss@gmail.com') {
-        router.push('/admin/dashboard')
-      } else {
-        router.push('/dashboard')
-      }
+      authedEmail = data.user?.email ?? email
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) { setError(error.message); setLoading(false); return }
+      authedEmail = data.user?.email ?? email
 
-      if (data.user) {
+      if (data.user && authedEmail !== 'tappointsboss@gmail.com') {
         const slug = nombre.toLowerCase()
           .replace(/[^a-z0-9\s-]/g, '')
           .replace(/\s+/g, '-')
@@ -46,6 +45,11 @@ export default function AuthPage() {
           recompensa: 'Premio especial',
         })
       }
+    }
+
+    if (authedEmail === 'tappointsboss@gmail.com') {
+      router.push('/admin/dashboard')
+    } else {
       router.push('/dashboard')
     }
     setLoading(false)
