@@ -148,3 +148,33 @@ create policy "Public reads qr_tokens" on qr_tokens
 -- Public can mark token as used (atomic lock on scan)
 create policy "Public updates qr_tokens" on qr_tokens
   for update using (true);
+
+-- ─── PUNTOS_PENDIENTES ───────────────────────────────────────────────────────
+create table if not exists puntos_pendientes (
+  id                uuid primary key default gen_random_uuid(),
+  negocio_id        uuid references negocios not null,
+  cliente_id        uuid references clientes not null,
+  nombre            text not null,
+  telefono          text not null,
+  puntos_solicitados integer not null default 1,
+  estado            text not null default 'pendiente'
+                    check (estado in ('pendiente', 'aprobado', 'rechazado')),
+  expires_at        timestamptz not null default (now() + interval '2 hours'),
+  created_at        timestamptz not null default now()
+);
+
+alter table puntos_pendientes enable row level security;
+
+-- Scan page (unauthenticated customer) can create pending requests
+create policy "Public insert pendientes" on puntos_pendientes
+  for insert with check (true);
+
+-- Public select allows client-side polling by id without auth
+create policy "Public select pendientes" on puntos_pendientes
+  for select using (true);
+
+-- Owner can approve or reject their pending requests
+create policy "Owner update pendientes" on puntos_pendientes
+  for update using (
+    negocio_id in (select id from negocios where user_id = auth.uid())
+  );
