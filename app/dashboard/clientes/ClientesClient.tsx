@@ -177,18 +177,19 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
   }
 
   return (
-    <div className="fade-up" style={{ padding: '32px', height: '100%', display: 'flex', flexDirection: 'column', gap: 24, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="fade-up page-pad" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'hidden' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Clientes</h1>
           <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>{clientes.length} clientes registrados</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'white', border: '1.5px solid #0A1A1410', borderRadius: 12, padding: '8px 14px' }}>
+        <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'white', border: '1.5px solid #0A1A1410', borderRadius: 12, padding: '8px 14px' }}>
           <Icon name="search" size={15} color="#0A1A1440" />
           <input
             placeholder="Buscar cliente..."
             value={search}
             onChange={e => setSearch(e.target.value)}
+            className="search-input"
             style={{ border: 'none', outline: 'none', fontSize: 13, background: 'transparent', width: 160, fontFamily: 'inherit', color: '#0A1A14' }}
           />
         </div>
@@ -204,7 +205,8 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
             {!search && <div style={{ fontSize: 13, marginTop: 6 }}>Los clientes aparecerán aquí cuando escaneen tu QR</div>}
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', minWidth: 680, borderCollapse: 'separate', borderSpacing: '0 6px' }}>
             <thead>
               <tr>
                 {['Cliente', 'Puntos', 'Visitas', 'Última visita', 'Nivel', ''].map((h, i) => (
@@ -310,6 +312,7 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

@@ -51,21 +51,21 @@ export default async function DashboardPage() {
   const dateStr = today.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
-    <div className="fade-up" style={{ padding: '32px', overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard</h1>
         <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4, textTransform: 'capitalize' }}>{dateStr}</p>
       </div>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
         <StatCard label="Clientes totales" value={String(totalClientes || 0)} sub="registrados" icon="users" />
         <StatCard label="Visitas hoy" value={String(visitasHoy?.length || 0)} sub="hoy" icon="trend" />
         <StatCard label="Cupones canjeados" value={String(cuponesCanjeados || 0)} sub="total" icon="coupons" />
       </div>
 
       {/* Chart + Top clients */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
+      <div className="chart-grid" style={{ display: 'grid', gap: 16 }}>
         <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 600, fontSize: 15 }}>Visitas esta semana</div>
@@ -177,8 +177,8 @@ export default async function DashboardPage() {
 
 function StatCard({ label, value, sub, icon }: { label: string; value: string; sub: string; icon: string }) {
   return (
-    <div style={{
-      background: 'white', borderRadius: 16, padding: 24,
+    <div className="stat-card" style={{
+      background: 'white', borderRadius: 16,
       display: 'flex', flexDirection: 'column', gap: 12,
       boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
     }}>
@@ -194,7 +194,7 @@ function StatCard({ label, value, sub, icon }: { label: string; value: string; s
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.04em', color: '#0A1A14' }}>{value}</div>
+        <div className="stat-value" style={{ fontWeight: 700, letterSpacing: '-0.04em', color: '#0A1A14' }}>{value}</div>
         <div style={{ fontSize: 13, color: '#0A1A1480', marginTop: 2 }}>{label}</div>
       </div>
     </div>

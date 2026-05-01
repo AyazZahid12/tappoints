@@ -40,13 +40,13 @@ export default function ProgramaClient({ negocio }: { negocio: NegocioPrograma }
   })
 
   return (
-    <div className="fade-up" style={{ padding: '32px', height: '100%', overflowY: 'auto' }}>
+    <div className="fade-up page-pad" style={{ height: '100%', overflowY: 'auto' }}>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Programa de puntos</h1>
         <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>Configura las reglas de fidelización</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, maxWidth: 720 }}>
+      <div className="programa-grid" style={{ display: 'grid', gap: 20, maxWidth: 720 }}>
         {/* Points per visit */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{
@@ -105,7 +105,7 @@ export default function ProgramaClient({ negocio }: { negocio: NegocioPrograma }
       </div>
 
       {/* Preview */}
-      <div style={{ marginTop: 20, maxWidth: 720 }}>
+      <div style={{ marginTop: 4, maxWidth: 720 }}>
         <div style={{ background: ACCENT + '12', border: `1.5px dashed ${ACCENT}40`, borderRadius: 16, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{
             width: 48, height: 48, borderRadius: 12, background: ACCENT,

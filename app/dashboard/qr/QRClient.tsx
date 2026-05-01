@@ -183,7 +183,7 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
   }
 
   return (
-    <div className="fade-up" style={{ padding: '32px', height: '100%', overflowY: 'auto' }}>
+    <div className="fade-up page-pad" style={{ height: '100%', overflowY: 'auto' }}>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Sumar punto</h1>
         <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>
@@ -240,7 +240,7 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
                       Solicitud: {formatDateTime(p.created_at)}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                     <button
                       onClick={() => aprobar(p)}
                       disabled={isBusy}
@@ -248,7 +248,7 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
                         padding: '7px 14px', borderRadius: 8, border: 'none',
                         background: ACCENT, color: 'white',
                         fontSize: 13, fontWeight: 600, cursor: isBusy ? 'not-allowed' : 'pointer',
-                        fontFamily: 'inherit',
+                        fontFamily: 'inherit', flex: '1 1 auto',
                       }}
                     >
                       {isBusy ? '...' : 'Aprobar'}
@@ -261,6 +261,7 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
                         border: '1.5px solid #EF444430', background: '#FEF2F2',
                         color: '#EF4444', fontSize: 13, fontWeight: 600,
                         cursor: isBusy ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
+                        flex: '1 1 auto',
                       }}
                     >
                       Rechazar
@@ -274,9 +275,9 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
       )}
 
       {/* ── QR + info ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 24, maxWidth: 840, alignItems: 'flex-start' }}>
+      <div className="qr-layout" style={{ display: 'flex', gap: 24, maxWidth: 840, alignItems: 'flex-start' }}>
         {/* Main QR panel */}
-        <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, flexShrink: 0, width: 300 }}>
+        <div className="qr-panel" style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, flexShrink: 0, width: 300 }}>
           {phase === 'idle' && (
             <>
               <div style={{ width: 212, height: 212, borderRadius: 16, border: `2px dashed ${ACCENT}40`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: '#0A1A1430' }}>
@@ -335,7 +336,7 @@ export default function QRClient({ businessName, appUrl, slug, negocioId, recomp
         </div>
 
         {/* Right column */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ background: 'white', borderRadius: 16, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>Cómo funciona</div>
             {[

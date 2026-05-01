@@ -44,13 +44,13 @@ export default function ConfiguracionClient({ negocio }: { negocio: NegocioConfi
   }
 
   return (
-    <div className="fade-up" style={{ padding: '32px', height: '100%', overflowY: 'auto' }}>
+    <div className="fade-up page-pad" style={{ height: '100%', overflowY: 'auto' }}>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Configuración del negocio</h1>
         <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>Gestiona la información básica de tu negocio</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 560, width: '100%' }}>
         {/* Business name */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
