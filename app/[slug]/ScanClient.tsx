@@ -10,7 +10,30 @@ interface Negocio {
   puntos_por_visita: number
 }
 
-export default function ScanClient({ negocio }: { negocio: Negocio; slug: string }) {
+export default function ScanClient({ negocio, isAtLimit }: { negocio: Negocio; slug: string; isAtLimit: boolean }) {
+  if (isAtLimit) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#E1F5EE', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', boxShadow: '0 8px 24px #1D9E7540' }}>
+              <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5c0 2.5-5 2.5-5 5 0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5"/></svg>
+            </div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0A1A14', letterSpacing: '-0.03em' }}>{negocio.nombre}</h1>
+          </div>
+          <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🚫</div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0A1A14', marginBottom: 10 }}>Límite de clientes alcanzado</h2>
+            <p style={{ fontSize: 14, color: '#0A1A1460', lineHeight: 1.7 }}>
+              Este negocio ha alcanzado su límite de clientes. Contacta con el negocio para más información.
+            </p>
+          </div>
+          <p style={{ fontSize: 12, color: '#0A1A1440', marginTop: 20 }}>Powered by TapPoints 💚</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{
       minHeight: '100vh', background: '#E1F5EE',

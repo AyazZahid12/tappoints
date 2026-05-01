@@ -30,9 +30,10 @@ interface Props {
   pointsForReward: number
   negocioId: string
   recompensa: string
+  plan: string
 }
 
-export default function ClientesClient({ clientes: initial, pointsForReward, negocioId, recompensa }: Props) {
+export default function ClientesClient({ clientes: initial, pointsForReward, negocioId, recompensa, plan }: Props) {
   const [clientes, setClientes] = useState(initial)
   const [search, setSearch] = useState('')
 
@@ -176,12 +177,44 @@ export default function ClientesClient({ clientes: initial, pointsForReward, neg
     setDeleting(false)
   }
 
+  const atLimit = plan === 'gratis' && clientes.length >= 50
+
   return (
     <div className="fade-up page-pad" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'hidden' }}>
+      {atLimit && (
+        <div style={{
+          background: 'linear-gradient(135deg, #1D9E75 0%, #15876300 100%)',
+          backgroundColor: '#1D9E75',
+          borderRadius: 14, padding: '16px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: 16, flexWrap: 'wrap',
+          boxShadow: '0 4px 20px #1D9E7530',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 28, flexShrink: 0 }}>⚠️</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>
+                Has alcanzado el límite de 50 clientes del plan Gratis
+              </div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+                Actualiza a Pro para clientes ilimitados
+              </div>
+            </div>
+          </div>
+          <a href="/planes" style={{
+            background: 'white', color: '#1D9E75',
+            fontSize: 13, fontWeight: 700,
+            padding: '9px 18px', borderRadius: 10,
+            textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
+            Ver planes
+          </a>
+        </div>
+      )}
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Clientes</h1>
-          <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>{clientes.length} clientes registrados</p>
+          <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>{clientes.length} clientes registrados{plan === 'gratis' ? ` / 50 máx` : ''}</p>
         </div>
         <div className="search-box" style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'white', border: '1.5px solid #0A1A1410', borderRadius: 12, padding: '8px 14px' }}>
           <Icon name="search" size={15} color="#0A1A1440" />

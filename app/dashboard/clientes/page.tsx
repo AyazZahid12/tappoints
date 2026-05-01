@@ -9,7 +9,7 @@ export default async function ClientesPage() {
 
   const { data: negocio } = await supabase
     .from('negocios')
-    .select('id, puntos_para_recompensa, recompensa')
+    .select('id, puntos_para_recompensa, recompensa, plan')
     .eq('user_id', user.id)
     .single()
 
@@ -21,12 +21,15 @@ export default async function ClientesPage() {
     .eq('negocio_id', negocio.id)
     .order('puntos', { ascending: false })
 
+  const plan = (negocio as any).plan ?? 'gratis'
+
   return (
     <ClientesClient
       clientes={clientes || []}
       pointsForReward={negocio.puntos_para_recompensa}
       negocioId={negocio.id}
       recompensa={negocio.recompensa}
+      plan={plan}
     />
   )
 }

@@ -21,15 +21,17 @@ export default async function ScanPage({ params }: Props) {
   const expired = new Date(qrToken.expires_at) < new Date()
   if (expired) return <ErrorPage message="QR expirado" detail="El negocio debe generar un nuevo QR." />
 
-  const { data: negocio } = await supabase
-    .from('negocios')
-    .select('id, nombre, recompensa, puntos_para_recompensa, puntos_por_visita')
-    .eq('id', qrToken.negocio_id)
-    .single()
+  const [{ data: negocio }, { count: clientCount }] = await Promise.all([
+    supabase.from('negocios').select('id, nombre, recompensa, puntos_para_recompensa, puntos_por_visita, plan').eq('id', qrToken.negocio_id).single(),
+    supabase.from('clientes').select('*', { count: 'exact', head: true }).eq('negocio_id', qrToken.negocio_id),
+  ])
 
   if (!negocio) return <ErrorPage message="Negocio no encontrado" detail="Intenta de nuevo." />
 
-  return <ScanClient token={token} negocio={negocio} expiresAt={qrToken.expires_at} />
+  const plan = (negocio as any).plan ?? 'gratis'
+  const isAtLimit = plan === 'gratis' && (clientCount ?? 0) >= 50
+
+  return <ScanClient token={token} negocio={negocio} expiresAt={qrToken.expires_at} isAtLimit={isAtLimit} />
 }
 
 function ErrorPage({ message, detail }: { message: string; detail: string }) {

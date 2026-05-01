@@ -21,6 +21,7 @@ interface Props {
   token: string
   negocio: Negocio
   expiresAt: string
+  isAtLimit: boolean
 }
 
 type Phase = 'form' | 'loading' | 'pending' | 'approved' | 'rejected' | 'done'
@@ -33,7 +34,7 @@ type Result = {
   nombre: string
 }
 
-export default function ScanClient({ token, negocio, expiresAt }: Props) {
+export default function ScanClient({ token, negocio, expiresAt, isAtLimit }: Props) {
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [phase, setPhase] = useState<Phase>('form')
@@ -174,7 +175,18 @@ export default function ScanClient({ token, negocio, expiresAt }: Props) {
       clienteId = clienteExistente.id
       puntosActuales = nuevoPuntos
     } else {
-      // New client
+      // New client — check free plan limit before inserting
+      const { count } = await supabase
+        .from('clientes')
+        .select('*', { count: 'exact', head: true })
+        .eq('negocio_id', negocio.id)
+
+      if ((count ?? 0) >= 50) {
+        setError('Este negocio ha alcanzado su límite de clientes. Contacta con el negocio para más información.')
+        setPhase('form')
+        return
+      }
+
       const nuevoPuntos = negocio.puntos_por_visita
       const { data: nuevoCliente, error: insertError } = await supabase
         .from('clientes')
@@ -241,6 +253,23 @@ export default function ScanClient({ token, negocio, expiresAt }: Props) {
       nombre: nombre.trim(),
     })
     setPhase('done')
+  }
+
+  // ── Limit reached ─────────────────────────────────────────────────────────
+  if (isAtLimit) {
+    return (
+      <Screen negocioNombre={negocio.nombre}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🚫</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0A1A14', marginBottom: 10 }}>
+            Límite de clientes alcanzado
+          </h2>
+          <p style={{ fontSize: 14, color: '#0A1A1460', lineHeight: 1.7 }}>
+            Este negocio ha alcanzado su límite de clientes. Contacta con el negocio para más información.
+          </p>
+        </div>
+      </Screen>
+    )
   }
 
   // ── Pending ────────────────────────────────────────────────────────────────
