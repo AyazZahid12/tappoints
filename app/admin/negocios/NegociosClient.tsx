@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { createClient } from '@/lib/supabase'
 
 const C = {
   card: '#FFFFFF',
@@ -79,7 +78,6 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
   const [detailData, setDetailData] = useState<DetailData | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const supabase = createClient()
 
   const filtered = negocios.filter(n => {
     const matchSearch = n.nombre.toLowerCase().includes(search.toLowerCase()) || n.slug.toLowerCase().includes(search.toLowerCase())
@@ -104,10 +102,18 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
   async function savePlan() {
     if (!selected) return
     setSaving(true)
-    const { error } = await supabase.from('negocios').update({ plan: detailPlan }).eq('id', selected.id)
-    if (!error) {
+    const res = await fetch(`/api/admin/negocio-detail?id=${selected.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: detailPlan }),
+    })
+    const resBody = await res.json().catch(() => ({}))
+    console.log('[savePlan] HTTP', res.status, JSON.stringify(resBody, null, 2))
+    if (res.ok) {
       setNegocios(prev => prev.map(n => n.id === selected.id ? { ...n, plan: detailPlan } : n))
       setSelected(prev => prev ? { ...prev, plan: detailPlan } : prev)
+    } else {
+      alert(`[HTTP ${res.status}] ${resBody.error ?? 'Error desconocido'}\n\n${JSON.stringify(resBody.dbg, null, 2)}`)
     }
     setSaving(false)
   }
@@ -116,10 +122,17 @@ export default function NegociosClient({ negocios: initialNegocios }: { negocios
     if (!selected) return
     setSaving(true)
     const newActivo = !selected.activo
-    const { error } = await supabase.from('negocios').update({ activo: newActivo }).eq('id', selected.id)
-    if (!error) {
+    const res = await fetch(`/api/admin/negocio-detail?id=${selected.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activo: newActivo }),
+    })
+    if (res.ok) {
       setNegocios(prev => prev.map(n => n.id === selected.id ? { ...n, activo: newActivo } : n))
       setSelected(prev => prev ? { ...prev, activo: newActivo } : prev)
+    } else {
+      const body = await res.json().catch(() => ({}))
+      alert(`Error al cambiar estado: ${body.error ?? res.status}`)
     }
     setSaving(false)
   }

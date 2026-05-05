@@ -14,13 +14,37 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
 
   if (!negocio) notFound()
 
-  const { count: clientCount } = await supabase
-    .from('clientes')
-    .select('*', { count: 'exact', head: true })
-    .eq('negocio_id', negocio.id)
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  const plan = (negocio as any).plan ?? 'gratis'
+  const [{ count: clientCount }, programasRaw] = await Promise.all([
+    supabase.from('clientes').select('*', { count: 'exact', head: true }).eq('negocio_id', negocio.id),
+    serviceKey
+      ? fetch(
+          `https://fkyrtbwjdqyrnfiawvzz.supabase.co/rest/v1/programas?negocio_id=eq.${negocio.id}&select=id,nombre,puntos_por_visita,puntos_para_recompensa,recompensa&order=created_at.asc`,
+          { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }, cache: 'no-store' }
+        ).then(r => r.ok ? r.json() : null).catch(() => null)
+      : Promise.resolve(null),
+  ])
+
+  const programas: { id: string; nombre: string; puntos_por_visita: number; puntos_para_recompensa: number; recompensa: string }[] | null =
+    Array.isArray(programasRaw) ? programasRaw : null
+
+  const plan = ((negocio as any).plan as string | null | undefined)?.toLowerCase().trim() || 'gratis'
   const isAtLimit = plan === 'gratis' && (clientCount ?? 0) >= 50
 
-  return <ScanClient negocio={negocio} slug={slug} isAtLimit={isAtLimit} />
+  const efectivos = programas && programas.length > 0 ? programas : [{
+    id: '',
+    nombre: 'Programa principal',
+    puntos_por_visita: negocio.puntos_por_visita,
+    puntos_para_recompensa: negocio.puntos_para_recompensa,
+    recompensa: negocio.recompensa,
+  }]
+
+  return (
+    <ScanClient
+      negocioNombre={negocio.nombre}
+      programas={efectivos}
+      isAtLimit={isAtLimit}
+    />
+  )
 }

@@ -13,7 +13,7 @@ export default async function CuponesPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) redirect('/dashboard')
 
   const { data: cupones } = await supabase
     .from('cupones')

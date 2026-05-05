@@ -13,9 +13,9 @@ export default async function ProgramaPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) redirect('/dashboard')
 
-  const plan = (negocio as any).plan ?? 'gratis'
+  const plan = ((negocio as any).plan as string | null | undefined)?.toLowerCase().trim() || 'gratis'
 
   let { data: programas } = await supabase
     .from('programas')

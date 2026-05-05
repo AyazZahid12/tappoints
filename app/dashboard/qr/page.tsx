@@ -13,7 +13,7 @@ export default async function QRPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) redirect('/dashboard')
 
   const { data: pendientes } = await supabase
     .from('puntos_pendientes')

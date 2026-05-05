@@ -13,7 +13,7 @@ export default async function ClientesPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) redirect('/dashboard')
 
   const { data: clientes } = await supabase
     .from('clientes')
@@ -21,7 +21,7 @@ export default async function ClientesPage() {
     .eq('negocio_id', negocio.id)
     .order('puntos', { ascending: false })
 
-  const plan = (negocio as any).plan ?? 'gratis'
+  const plan = ((negocio as any).plan as string | null | undefined)?.toLowerCase().trim() || 'gratis'
 
   return (
     <ClientesClient

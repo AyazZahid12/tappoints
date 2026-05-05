@@ -15,7 +15,18 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) {
+    // No negocio row — show setup prompt instead of redirecting (redirect would loop)
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', maxWidth: 320 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Tu negocio no está configurado</h2>
+          <p style={{ fontSize: 14, color: '#0A1A1460', marginTop: 8 }}>Contacta al administrador para activar tu cuenta.</p>
+        </div>
+      </div>
+    )
+  }
 
   // Fetch metrics
   const [

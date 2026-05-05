@@ -13,7 +13,7 @@ export default async function ConfiguracionPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) redirect('/dashboard')
 
   return (
     <ConfiguracionClient negocio={negocio} />
