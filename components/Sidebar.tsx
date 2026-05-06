@@ -8,6 +8,7 @@ import Icon from './Icon'
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: '/dashboard' },
   { id: 'clientes', label: 'Clientes', icon: 'clients', href: '/dashboard/clientes' },
+  { id: 'escanear', label: 'Escanear cliente', icon: 'scan', href: '/dashboard/escanear' },
   { id: 'programa', label: 'Programa', icon: 'program', href: '/dashboard/programa' },
   { id: 'qr', label: 'Mi QR / NFC', icon: 'qr', href: '/dashboard/qr' },
   { id: 'cupones', label: 'Cupones', icon: 'coupons', href: '/dashboard/cupones' },
