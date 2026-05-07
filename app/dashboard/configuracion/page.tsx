@@ -1,25 +1,21 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import CuponesClient from './CuponesClient'
+import ConfiguracionClient from './ConfiguracionClient'
 
-export default async function CuponesPage() {
+export default async function ConfiguracionPage() {
   const supabase = await createServerSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
   const { data: negocio } = await supabase
     .from('negocios')
-    .select('id, recompensa')
+    .select('id, nombre, slug, descripcion')
     .eq('user_id', user.id)
     .single()
 
   if (!negocio) redirect('/dashboard')
 
-  const { data: cupones } = await supabase
-    .from('cupones')
-    .select('*, clientes(nombre)')
-    .eq('negocio_id', negocio.id)
-    .order('created_at', { ascending: false })
-
-  return <CuponesClient cupones={cupones || []} reward={negocio.recompensa} negocioId={negocio.id} />
+  return (
+    <ConfiguracionClient negocio={negocio} />
+  )
 }

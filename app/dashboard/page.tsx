@@ -15,7 +15,18 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!negocio) redirect('/auth')
+  if (!negocio) {
+    // No negocio row — show setup prompt instead of redirecting (redirect would loop)
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', maxWidth: 320 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
+          <h2 style={{ fontSize: 20, fontWeight: 700 }}>Tu negocio no está configurado</h2>
+          <p style={{ fontSize: 14, color: '#0A1A1460', marginTop: 8 }}>Contacta al administrador para activar tu cuenta.</p>
+        </div>
+      </div>
+    )
+  }
 
   // Fetch metrics
   const [
@@ -31,7 +42,7 @@ export default async function DashboardPage() {
       .gte('created_at', new Date().toISOString().split('T')[0]),
     supabase.from('cupones').select('*', { count: 'exact', head: true }).eq('negocio_id', negocio.id).eq('canjeado', true),
     supabase.from('clientes').select('id, nombre, puntos, nivel').eq('negocio_id', negocio.id).order('puntos', { ascending: false }).limit(4),
-    supabase.from('visitas').select('created_at, clientes(nombre)').eq('negocio_id', negocio.id).order('created_at', { ascending: false }).limit(5),
+    supabase.from('visitas').select('created_at, puntos_ganados, clientes(nombre, telefono)').eq('negocio_id', negocio.id).order('created_at', { ascending: false }).limit(10),
     supabase.from('visitas').select('created_at').eq('negocio_id', negocio.id)
       .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
   ])
@@ -51,21 +62,21 @@ export default async function DashboardPage() {
   const dateStr = today.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   return (
-    <div className="fade-up" style={{ padding: '32px', overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="fade-up page-pad" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
         <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Dashboard</h1>
         <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4, textTransform: 'capitalize' }}>{dateStr}</p>
       </div>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+      <div className="stats-grid" style={{ display: 'grid', gap: 16 }}>
         <StatCard label="Clientes totales" value={String(totalClientes || 0)} sub="registrados" icon="users" />
         <StatCard label="Visitas hoy" value={String(visitasHoy?.length || 0)} sub="hoy" icon="trend" />
         <StatCard label="Cupones canjeados" value={String(cuponesCanjeados || 0)} sub="total" icon="coupons" />
       </div>
 
       {/* Chart + Top clients */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 16 }}>
+      <div className="chart-grid" style={{ display: 'grid', gap: 16 }}>
         <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ marginBottom: 20 }}>
             <div style={{ fontWeight: 600, fontSize: 15 }}>Visitas esta semana</div>
@@ -126,19 +137,44 @@ export default async function DashboardPage() {
 
       {/* Recent activity */}
       <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 16 }}>Actividad reciente</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>Actividad reciente</div>
+          <div style={{ fontSize: 12, color: '#0A1A1440' }}>Últimas {actividadReciente?.length || 0} acciones</div>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {actividadReciente && actividadReciente.length > 0 ? actividadReciente.map((v: any, i: number) => {
-            const nombre = v.clientes?.nombre || 'Cliente'
-            const time = new Date(v.created_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+            const clienteNombre = (v.clientes as any)?.nombre || 'Cliente'
+            const telefono = (v.clientes as any)?.telefono || ''
+            const puntos = v.puntos_ganados || 1
+            const avatar = clienteNombre.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
+            const dt = new Date(v.created_at)
+            const dateStr = dt.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            const timeStr = dt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
             return (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
                 borderBottom: i < actividadReciente.length - 1 ? '1px solid #0A1A1408' : 'none'
               }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: ACCENT + '80' }} />
-                <div style={{ flex: 1, fontSize: 13 }}>{nombre} acumuló 1 punto</div>
-                <div style={{ fontSize: 12, color: '#0A1A1440' }}>{time}</div>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  background: ACCENT + '15', color: ACCENT,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, fontWeight: 700
+                }}>{avatar}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {clienteNombre}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#0A1A1455', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ background: ACCENT + '15', color: ACCENT, fontWeight: 600, fontSize: 11, padding: '1px 7px', borderRadius: 99 }}>+{puntos} pt{puntos > 1 ? 's' : ''}</span>
+                    <span>Visita registrada</span>
+                    {telefono && <span style={{ color: '#0A1A1435' }}>· {telefono}</span>}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0A1A14' }}>{timeStr}</div>
+                  <div style={{ fontSize: 11, color: '#0A1A1440', marginTop: 2 }}>{dateStr}</div>
+                </div>
               </div>
             )
           }) : (
@@ -152,8 +188,8 @@ export default async function DashboardPage() {
 
 function StatCard({ label, value, sub, icon }: { label: string; value: string; sub: string; icon: string }) {
   return (
-    <div style={{
-      background: 'white', borderRadius: 16, padding: 24,
+    <div className="stat-card" style={{
+      background: 'white', borderRadius: 16,
       display: 'flex', flexDirection: 'column', gap: 12,
       boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
     }}>
@@ -169,7 +205,7 @@ function StatCard({ label, value, sub, icon }: { label: string; value: string; s
         </div>
       </div>
       <div>
-        <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.04em', color: '#0A1A14' }}>{value}</div>
+        <div className="stat-value" style={{ fontWeight: 700, letterSpacing: '-0.04em', color: '#0A1A14' }}>{value}</div>
         <div style={{ fontSize: 13, color: '#0A1A1480', marginTop: 2 }}>{label}</div>
       </div>
     </div>

@@ -45,8 +45,8 @@ export default function CuponesClient({
   const canjeados = cupones.filter(c => c.canjeado).length
 
   return (
-    <div className="fade-up" style={{ padding: '32px', height: '100%', display: 'flex', flexDirection: 'column', gap: 24, overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="fade-up page-pad" style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'hidden' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em' }}>Cupones</h1>
           <p style={{ color: '#0A1A1460', fontSize: 14, marginTop: 4 }}>
@@ -54,7 +54,7 @@ export default function CuponesClient({
           </p>
         </div>
         {/* Filter tabs */}
-        <div style={{ display: 'flex', gap: 4, background: 'white', padding: 4, borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div className="filter-tabs" style={{ display: 'flex', gap: 4, background: 'white', padding: 4, borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', flexShrink: 0 }}>
           {([
             { k: 'todos', l: 'Todos' },
             { k: 'pendientes', l: 'Pendientes' },
@@ -97,8 +97,8 @@ export default function CuponesClient({
           </div>
         ) : filtered.map(c => (
           <div key={c.id} style={{
-            background: 'white', borderRadius: 14, padding: '16px 20px',
-            display: 'flex', alignItems: 'center', gap: 16,
+            background: 'white', borderRadius: 14, padding: '14px 16px',
+            display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
             boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             opacity: c.canjeado ? 0.75 : 1
           }}>
