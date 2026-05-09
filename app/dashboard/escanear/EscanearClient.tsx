@@ -19,7 +19,7 @@ type VisitaHoy = {
   id: any
   puntos_ganados: any
   created_at: any
-  clientes: { nombre: string }[] | { nombre: string }
+  clientes: { nombre: string } | null
 }
 
 interface ScanResult {
@@ -456,7 +456,7 @@ export default function EscanearClient({ negocio, visitasIniciales }: Props) {
               </div>
             ) : (
               history.map(v => {
-                const nombre = (Array.isArray(v.clientes) ? v.clientes[0]?.nombre : v.clientes?.nombre) || 'Cliente'
+                const nombre = v.clientes?.nombre || 'Cliente'
                 const avatar = nombre.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
                 const isNew = newIds.has(v.id)
                 return (
