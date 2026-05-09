@@ -43,6 +43,8 @@ export default async function SlugPage({ params }: { params: Promise<{ slug: str
   return (
     <ScanClient
       negocioNombre={negocio.nombre}
+      negocioId={negocio.id}
+      slug={slug}
       programas={efectivos}
       isAtLimit={isAtLimit}
     />
