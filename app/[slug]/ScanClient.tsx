@@ -33,6 +33,20 @@ type View = 'loading' | 'qr' | 'register' | 'recover'
 
 const lsKey = (slug: string) => `tappoints_${slug}_v1`
 
+function genUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof (crypto as any).randomUUID === 'function') {
+    return (crypto as any).randomUUID() as string
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
+function lsSet(key: string, value: string): void {
+  try { localStorage.setItem(key, value) } catch {}
+}
+
 export default function ScanClient({ negocioNombre, negocioId, slug, programas, isAtLimit }: Props) {
   const prog = programas[0]
 
@@ -112,7 +126,7 @@ export default function ScanClient({ negocioNombre, negocioId, slug, programas, 
     if (existing) {
       if (!existing.qr_personal_id) {
         await supabase.from('clientes')
-          .update({ qr_code: tel, qr_personal_id: crypto.randomUUID() })
+          .update({ qr_code: tel, qr_personal_id: genUUID() })
           .eq('id', existing.id)
       }
     } else {
@@ -124,7 +138,7 @@ export default function ScanClient({ negocioNombre, negocioId, slug, programas, 
         visitas: 0,
         nivel: 'nuevo',
         qr_code: tel,
-        qr_personal_id: crypto.randomUUID(),
+        qr_personal_id: genUUID(),
       })
       if (insertErr) {
         setErr('Error al registrarte. Intenta de nuevo.')
@@ -134,7 +148,7 @@ export default function ScanClient({ negocioNombre, negocioId, slug, programas, 
     }
 
     const data: Stored = { nombre: nom, telefono: tel }
-    localStorage.setItem(lsKey(slug), JSON.stringify(data))
+    lsSet(lsKey(slug), JSON.stringify(data))
     setStored(data)
     setView('qr')
     setBusy(false)
@@ -164,12 +178,12 @@ export default function ScanClient({ negocioNombre, negocioId, slug, programas, 
     // Ensure qr fields are set
     if (!cliente.qr_personal_id) {
       await supabase.from('clientes')
-        .update({ qr_code: tel, qr_personal_id: crypto.randomUUID() })
+        .update({ qr_code: tel, qr_personal_id: genUUID() })
         .eq('id', cliente.id)
     }
 
     const data: Stored = { nombre: cliente.nombre, telefono: cliente.telefono }
-    localStorage.setItem(lsKey(slug), JSON.stringify(data))
+    lsSet(lsKey(slug), JSON.stringify(data))
     setStored(data)
     setView('qr')
     setBusy(false)
