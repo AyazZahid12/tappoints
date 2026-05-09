@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { id: 'clientes', label: 'Clientes', icon: 'clients', href: '/dashboard/clientes' },
   { id: 'escanear', label: 'Escanear cliente', icon: 'scan', href: '/dashboard/escanear' },
   { id: 'programa', label: 'Programa', icon: 'program', href: '/dashboard/programa' },
-  { id: 'qr', label: 'Mi QR / NFC', icon: 'qr', href: '/dashboard/qr' },
+  { id: 'qr', label: 'Mi QR del negocio', icon: 'qr', href: '/dashboard/qr' },
   { id: 'cupones', label: 'Cupones', icon: 'coupons', href: '/dashboard/cupones' },
   { id: 'configuracion', label: 'Configuración', icon: 'settings', href: '/dashboard/configuracion' },
 ]
