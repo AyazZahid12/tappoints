@@ -26,5 +26,16 @@ export default async function EscanearPage() {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  return <EscanearClient negocio={negocio} visitasIniciales={visitasHoy || []} />
+  const visitasIniciales = (visitasHoy || []).map(v => ({
+    id: v.id,
+    puntos_ganados: v.puntos_ganados,
+    created_at: v.created_at,
+    clientes: Array.isArray(v.clientes)
+      ? (v.clientes[0] ? { nombre: String(v.clientes[0].nombre) } : null)
+      : v.clientes
+        ? { nombre: String((v.clientes as { nombre: unknown }).nombre) }
+        : null,
+  }))
+
+  return <EscanearClient negocio={negocio} visitasIniciales={visitasIniciales} />
 }
